@@ -3,7 +3,7 @@ module.exports = function sync(generator){
     throw new Error('Not a generator function');
   }
 
-  function resume(res){
+  function resume(err, res){
     var result = iterator.next(res);
     if(result.done && done){
       return done(null, result.value);
