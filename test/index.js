@@ -42,10 +42,11 @@ module.exports = {
       }
     },
     'if async fn return one value': {
-      'it should be passed to the yielding point': function(){
+      'it should be passed to the yielding point': function(done){
         sync(function*(){
           var one = yield echo(1);
           expect(one).to.be.equal(1);
+          done();
         })
       }
     }
