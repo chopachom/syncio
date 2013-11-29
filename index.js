@@ -4,6 +4,9 @@ module.exports = function sync(generator){
   }
 
   function resume(err, res){
+    if(err){
+      return iterator.throw(err);
+    }
     var result = iterator.next(res);
     if(result.done && done){
       return done(null, result.value);
