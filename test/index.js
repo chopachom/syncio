@@ -58,7 +58,7 @@ module.exports = {
         })
       }
     },
-    'if async fn return error': {
+    'if async fn returns error': {
       'it should be thrown at the yielding point': function(done){
         sync(function*(){
           try {
