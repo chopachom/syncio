@@ -43,8 +43,9 @@ module.exports = {
     'generator yields several times': {
       'it should work': function(done){
         sync(function*(){
-          yield sleep(10);
-          yield sleep(10);
+          var one = yield echo(1);
+          var two = yield echo(2);
+          expect(one+two).to.be.equal(3);
           done();
         });
       }
