@@ -11,15 +11,18 @@ module.exports = function sync (generator) {
     if (result.done && done) {
       return done(null, result.value);
     }
+    // if generator yielded async function
     if (typeof result.value === 'function') {
+      // pass resume fn so that it will wake up the generator when
+      // async function will finish
       result.value(resume);
     }
   }
 
   var done;
   var iterator = generator();
-  var continuator = iterator.next().value;
-  continuator(resume);
+
+  resume(null);
 
   return function (fn) {
     done = fn;
