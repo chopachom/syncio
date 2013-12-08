@@ -5,7 +5,13 @@ module.exports = function sync (generator) {
 
   function resume (err, res) {
     if (err) {
-      return iterator.throw(err);
+      // calling throw will throw error if generator don't catch it
+      try {
+        iterator.throw(err);
+      } catch (e) {
+        if(done) done(err);
+      }
+      return
     }
     var result = iterator.next(res);
     if (result.done && done) {
