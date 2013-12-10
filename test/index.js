@@ -50,7 +50,7 @@ module.exports = {
         });
       }
     },
-    'if async fn return one value': {
+    'if async fn returns one value': {
       'it should be passed to the yielding point': function(done){
         sync(function*(){
           var one = yield echo(1);
@@ -68,6 +68,16 @@ module.exports = {
             expect(e.message).to.eql('test error');
             done();
           }
+        })
+      }
+    },
+    "if generator didn't catch error": {
+      'it should be passed to sync callback': function(done){
+        sync(function*(){
+          yield error();
+        })(function(e){
+          expect(e.message).to.eql('test error');
+          done();
         })
       }
     }
