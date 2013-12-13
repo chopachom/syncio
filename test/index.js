@@ -27,10 +27,27 @@ function error(){
 
 module.exports = {
   'sync(fn)': {
-    "it should throw error if fn isn't a generator": function(){
-      expect(function(){
-        sync(function(){})
-      }).to.throw(Error);
+    "if fn isn't a generator": {
+      'it should throw error': function(){
+        expect(function(){
+          sync(1)
+        }).to.throw(Error);
+      }
+    },
+    'if fn is node-style function': {
+      'it should wrap it': function(done){
+        var sleep = sync(function(time, callback){
+          setTimeout(function(){
+            callback(null, time)
+          }, time);
+        });
+        sync(function*(){
+          var slept = yield* sleep(10);
+          expect(slept).to.be.equal(10);
+          done();
+        });
+      }
+      // TODO: test context
     },
     'generator yields once': {
       'it should work': function(done){
@@ -50,6 +67,7 @@ module.exports = {
         });
       }
     },
+    //TODO: multiple return values
     'if async fn returns one value': {
       'it should be passed to the yielding point': function(done){
         sync(function*(){

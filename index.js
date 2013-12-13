@@ -1,4 +1,7 @@
 module.exports = function sync (generator) {
+  if(isPlainFunction(generator)){
+    return denodeify(generator, arguments[1]);
+  }
   if (!isGeneratorFunction(generator)) {
     throw new Error('Not a generator function');
   }
@@ -37,4 +40,18 @@ module.exports = function sync (generator) {
 
 function isGeneratorFunction (obj) {
   return obj && obj.constructor && obj.constructor.name === 'GeneratorFunction';
+}
+
+function isPlainFunction(obj){
+  return typeof obj === 'function' && !isGeneratorFunction(obj);
+}
+
+function denodeify(fn, ctx){
+  return function*(){
+    var args = Array.prototype.slice.call(arguments, 0);
+    return yield function(resume){
+      args.push(resume);
+      fn.apply(ctx, args);
+    }
+  }
 }
