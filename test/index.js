@@ -10,9 +10,11 @@ function sleep(time){
 }
 
 function echo(value){
+  var args = Array.prototype.slice.call(arguments, 0);
   return function(resume){
     setImmediate(function(){
-      resume(null, value);
+      args.unshift(null);
+      resume.apply(null, args);
     });
   }
 }
@@ -67,12 +69,20 @@ module.exports = {
         });
       }
     },
-    //TODO: multiple return values
     'if async fn returns one value': {
       'it should be passed to the yielding point': function(done){
         sync(function*(){
           var one = yield echo(1);
           expect(one).to.be.equal(1);
+          done();
+        })
+      }
+    },
+    'if async fn returns multiple values': {
+      'they should be passed to the yielding point as array': function(done){
+        sync(function*(){
+          var arr = yield echo(1,2,3,4,5);
+          expect(arr).to.be.eql([1,2,3,4,5]);
           done();
         })
       }

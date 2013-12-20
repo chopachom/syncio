@@ -1,3 +1,5 @@
+var slice = Array.prototype.slice;
+
 module.exports = function sync (fn) {
   if(isPlainFunction(fn)){
     return denodeify(fn, arguments[1]);
@@ -6,7 +8,7 @@ module.exports = function sync (fn) {
     throw new Error('Not a generator function');
   }
 
-  function resume (err, res) {
+  function resume (err) {
     if (err) {
       // calling throw will throw error if generator don't catch it
       try {
@@ -16,7 +18,13 @@ module.exports = function sync (fn) {
       }
       return
     }
-    var result = generator.next(res);
+    var args, result;
+    args = slice.call(arguments, 1);
+    // if we received one argument then just pass it as is
+    if(args.length === 1){
+      args = args[0];
+    }
+    result = generator.next(args);
     if (result.done && done) {
       return done(null, result.value);
     }
