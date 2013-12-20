@@ -1,8 +1,8 @@
-module.exports = function sync (generator) {
-  if(isPlainFunction(generator)){
-    return denodeify(generator, arguments[1]);
+module.exports = function sync (fn) {
+  if(isPlainFunction(fn)){
+    return denodeify(fn, arguments[1]);
   }
-  if (!isGeneratorFunction(generator)) {
+  if (!isGeneratorFunction(fn)) {
     throw new Error('Not a generator function');
   }
 
@@ -10,13 +10,13 @@ module.exports = function sync (generator) {
     if (err) {
       // calling throw will throw error if generator don't catch it
       try {
-        iterator.throw(err);
+        generator.throw(err);
       } catch (e) {
         if(done) done(err);
       }
       return
     }
-    var result = iterator.next(res);
+    var result = generator.next(res);
     if (result.done && done) {
       return done(null, result.value);
     }
@@ -29,7 +29,7 @@ module.exports = function sync (generator) {
   }
 
   var done;
-  var iterator = generator();
+  var generator = fn();
 
   resume(null);
 
