@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sync = require('../index');
+var Promise = require('bluebird');
 
 function sleep(time){
   return function(resume){
@@ -9,7 +10,7 @@ function sleep(time){
   }
 }
 
-function echo(value){
+function echo(){
   var args = Array.prototype.slice.call(arguments, 0);
   return function(resume){
     setImmediate(function(){
@@ -50,6 +51,35 @@ module.exports = {
         });
       }
       // TODO: test context
+    },
+    'if fn is a promise': {
+      'it should wrap it': function(done){
+        var promisified = Promise.promisify(function(time, callback){
+          setTimeout(function(){
+            callback(null, time);
+          }, time);
+        });
+        sync(function*(){
+          var res = yield* sync(promisified(10));
+          expect(res).to.be.equal(10);
+          done();
+        });
+      },
+      'it should throw error if promise is rejected': function(done){
+        var promisified = Promise.promisify(function(time, callback){
+          setTimeout(function(){
+            callback(new Error('bang!'), time);
+          }, time);
+        });
+        sync(function*(){
+          try {
+            var res = yield* sync(promisified(10));
+          } catch(e) {
+            expect(e.message).to.be.equal('bang!');
+            done();
+          }
+        });
+      }
     },
     'generator yields once': {
       'it should work': function(done){
