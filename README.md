@@ -1,3 +1,4 @@
+[![Build Status](https://api.travis-ci.org/chopachom/syncio.png?branch=master)](https://travis-ci.org/chopachom/syncio)
 #Making async code sync#
 Such generators, much synchronous, so stacktraces, wow.
 
