@@ -20,6 +20,10 @@ function echo(){
   }
 }
 
+function* io(val){
+  return yield echo(val);
+}
+
 function error(){
   return function(resume){
     setImmediate(function(){
@@ -139,5 +143,34 @@ module.exports = {
         })
       }
     }
+  },
+  'sync.join([gen1, gen2, ...])': {
+    'it should yield an array with results of the given generators': function(done){
+      sync(function*(){
+        var arr = yield* sync.join([io(1), io(2), io(3)]);
+        expect(arr).to.be.eql([1,2,3]);
+        done();
+      })
+    },
+    'it should run given generators in parallel': function(done){
+      sync(function*(){
+        var order = [];
+        var io = function* (val){
+          order.push(val);
+          return yield function(resume){
+            setImmediate(function(){
+              order.push(0);
+              resume(null, val);
+            });
+          }
+        };
+        var arr = yield* sync.join([io(1), io(2), io(3)]);
+        // if they were running in sync it would've been 1,0,2,0,3,0
+        expect(order).to.be.eql([1,2,3,0,0,0]);
+        done();
+      })
+    }
   }
 };
+
+// TODO: test stack traces

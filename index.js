@@ -11,23 +11,13 @@ module.exports = function sync (fn) {
     throw new Error('Not a generator function');
   }
 
-  function resume (err) {
-    if (err) {
-      // calling throw will throw error if generator don't catch it
-      try {
-        generator.throw(err);
-      } catch (e) {
-        if(done) done(err);
-      }
-      return
+  function resume () {
+    try {
+      var result = nextOrError(generator, arguments);
+    } catch (e) {
+      if (done) return done(e);
+      else throw e
     }
-    var args, result;
-    args = slice.call(arguments, 1);
-    // if we received one argument then just pass it as is
-    if(args.length === 1){
-      args = args[0];
-    }
-    result = generator.next(args);
     if (result.done) {
       if (done) done(null, result.value);
       return;
@@ -37,10 +27,9 @@ module.exports = function sync (fn) {
       // pass resume fn so that it will wake up the generator when
       // async function will finish
       result.value(resume);
-    } else {
-      console.log(result);
-      throw new Error('Generator must yield async function that accepts one argument - the callback');
+      return;
     }
+    throw new Error('Generator must yield async function that accepts one argument - the callback');
   }
 
   var done;
@@ -52,6 +41,70 @@ module.exports = function sync (fn) {
     done = fn;
   }
 };
+
+// TODO: document this function
+module.exports.join = function* join (generators) {
+  var results = [generators.length];
+  var interim = [generators.length];
+  while (truthy(generators) > 0) {
+    // get all the continuations from the generators
+    var continuations = generators.map(function (g, i) {
+      if (!g) return;
+      var res = nextOrError(g, interim[i]);
+      if (res.done) {
+        results[i] = res.value;
+        return
+      }
+      return res.value
+    });
+    // remove exhausted generators
+    continuations.forEach(function (c, i) {
+      if (!c) generators[i] = null
+    });
+    // if we don't have continuation for the respective generator
+    // substitute it with no-op function, this is happening when generator is exhausted
+    continuations = continuations.map(function (c) {
+      return c || noop;
+    });
+    interim = yield function (resume) {
+      parallel(continuations, function (results) {
+        resume(null, results);
+      });
+    }
+  }
+  return results
+};
+
+function nextOrError (generator, arguments) {
+  arguments || (arguments = []);
+  var err = arguments[0];
+  if (err) {
+    // calling throw will throw error if generator don't catch it
+    return generator.throw(err);
+  }
+  var args = slice.call(arguments, 1);
+  // if we received one argument then just pass it as is
+  if (args.length === 1) {
+    args = args[0];
+  }
+  return generator.next(args);
+}
+
+function parallel (fns, cb) {
+  var i = fns.length;
+  var results = [];
+
+  fns.forEach(function (fn, index) {
+    fn(function () {
+      results[index] = slice.call(arguments, 0);
+      --i || cb(results);
+    });
+  });
+}
+
+//function isGenerator(obj) {
+//  return obj && 'function' == typeof obj.next && 'function' == typeof obj.throw;
+//}
 
 function isGeneratorFunction (obj) {
   return obj && obj.constructor && obj.constructor.name === 'GeneratorFunction';
@@ -88,5 +141,14 @@ function* depromisify(promise){
   }
 }
 
-// TODO:
-// - parallel execution
+function truthy (array) {
+  var count = 0;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i]) count++;
+  }
+  return count
+}
+
+function noop (cb) {
+  cb()
+}
