@@ -1,0 +1,28 @@
+{
+  "name": "syncio",
+  "version": "0.0.0",
+  "description": "Synchronous IO for Node.js",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "bluebird": "~1.0",
+    "chai": "~1.8",
+    "mocha": "~1.17"
+  },
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha test/index.js --ui exports -R spec --harmony"
+  },
+  "keywords": [
+    "yield",
+    "generators",
+    "synchronous",
+    "async",
+    "await"
+  ],
+  "author": "Alexander Petrovich",
+  "license": "MIT"
+}
