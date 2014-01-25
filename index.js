@@ -121,24 +121,49 @@ function isPromise(obj) {
 function denodeify(fn, ctx){
   return function*(){
     var args = Array.prototype.slice.call(arguments, 0);
-    return yield function(resume){
-      args.push(resume);
-      // TODO: can be optimized for small number of args
-      fn.apply(ctx, args);
+    try {
+      return yield function(resume){
+        args.push(resume);
+        // TODO: can be optimized for small number of args
+        fn.apply(ctx, args);
+      }
+    } catch (e) {
+      throw stackify(e);
     }
   }
 }
 
 function* depromisify(promise){
-  return yield function(resume){
-    promise.then(function(){
-      var args = slice.call(arguments,0);
-      args.unshift(null);
-      resume.apply(null, args);
-    }, function(err){
-      resume(err);
-    })
+  try {
+    return yield function(resume){
+      promise.then(function(){
+        var args = slice.call(arguments,0);
+        args.unshift(null);
+        resume.apply(null, args);
+      }, function(err){
+        resume(err);
+      })
+    }
+  } catch (e) {
+    throw stackify(e)
   }
+}
+
+// URGH!!!!11 this is so ugly, but it works
+function stackify(e){
+  var stack = e.stack.split("\n");
+  var raw = new Error().stack.split("\n");
+  var clean = raw.slice(0);
+  clean.splice(0, 3);
+  clean.unshift('from syncio generator (cleaned):');
+  clean = clean.filter(function(line){
+    return line !== '    at GeneratorFunctionPrototype.throw (native)'
+  });
+  clean.splice(clean.length-1, 1);
+  //raw.splice(0, 1);
+  //raw.unshift('raw syncio stack:');
+  e.stack = stack.concat(clean).join("\n");
+  return e
 }
 
 function truthy (array) {
