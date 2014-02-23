@@ -1,4 +1,5 @@
 [![Build Status](https://api.travis-ci.org/chopachom/syncio.png?branch=master)](https://travis-ci.org/chopachom/syncio)
+![Dependencies](https://david-dm.org/chopachom/syncio.png)
 #Making async code sync#
 Such generators, much synchronous, so stacktraces, wow.
 
@@ -79,8 +80,8 @@ from syncio generator (cleaned):
 ##Parallel execution##
 `syncio` also supports parallel execution of generators
 ```javascript
-var sync = require('./index');
-// "denodeify" the function into a generator
+var sync = require('syncio');
+// transform node-style function into a generator
 var request = sync(require('request'));
 
 function* status(url){
