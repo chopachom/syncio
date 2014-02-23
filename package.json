@@ -1,6 +1,6 @@
 {
   "name": "syncio",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Synchronous IO for Node.js",
   "main": "index.js",
   "directories": {
